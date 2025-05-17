@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balochi Word App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to top right, #89f7fe 0%, #66a6ff 100%);
+            color: #1e293b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+        }
+        .container { /* Renamed from quiz-container to be more general */
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 600px; /* Increased max-width slightly for dictionary */
+            text-align: center;
+        }
+        .quiz-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            margin-bottom: 1.5rem;
+        }
+        .navigation { /* Style for navigation buttons */
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .nav-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+         .nav-button.active {
+            background-color: rgba(255, 255, 255, 0.4);
+            font-weight: 600;
+        }
+
+        /* Styles for Quiz Section */
+        #quiz-area {
+             /* Initially visible */
+        }
+        .word-display-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        .word-display {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #e0f2fe;
+            margin: 0;
+            margin-right: 1rem;
+        }
+        .speaker-icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+        .speaker-icon-button:hover {
+             background-color: rgba(255, 255, 255, 0.2);
+        }
+         .speaker-icon-button svg {
+            fill: #e0f2fe;
+            width: 1.8rem;
+            height: 1.8rem;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        @media (min-width: 640px) {
+            .options-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+        }
+        .option-button {
+            background-color: rgba(96, 165, 250, 0.8);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            width: 100%;
+        }
+        .option-button:hover {
+            background-color: rgba(59, 130, 246, 0.9);
+        }
+        .option-button:active {
+            transform: scale(0.98);
+        }
+        .feedback-message {
+            font-size: 1.125rem;
+            font-weight: 600;
+            min-height: 2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .feedback-message.correct {
+            color: #a7f3d0;
+        }
+        .feedback-message.incorrect {
+            color: #fecaca;
+        }
+        .feedback-translation {
+            font-size: 1rem;
+            font-weight: 400;
+            margin-top: 0.5rem;
+            color: #f0f9ff;
+        }
+        .score-display, .streak-display {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: #f0f9ff;
+            margin-bottom: 0.5rem;
+        }
+        .next-button, .restart-button {
+            background-color: rgba(16, 185, 129, 0.85);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 1rem;
+        }
+        .next-button:hover, .restart-button:hover {
+            background-color: rgba(5, 150, 105, 0.9);
+        }
+        .next-button:disabled {
+            background-color: rgba(156, 163, 175, 0.7);
+            border-color: rgba(209, 213, 219, 0.5);
+            cursor: not-allowed;
+        }
+        .final-score-container {
+            padding: 2rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+        }
+        .final-score-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+        .final-score-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #a7f3d0;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Styles for Dictionary Section */
+        #dictionary-area {
+            text-align: left; /* Align dictionary text left */
+        }
+        .dictionary-controls { /* Container for search and toggle */
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+        .dictionary-search { /* Style for the search input container */
+            flex-grow: 1; /* Allow search to take available space */
+            padding: 0.75rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+        }
+        .dictionary-search input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #f0f9ff;
+            font-size: 1rem;
+        }
+         .dictionary-search input::placeholder {
+             color: rgba(240, 249, 255, 0.7);
+         }
+         .dictionary-search input:focus {
+             outline: none;
+             border-color: rgba(255, 255, 255, 0.5);
+         }
+         .language-toggle-button { /* Style for the language toggle button */
+            background-color: rgba(129, 140, 248, 0.8); /* Indigo with transparency */
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+         }
+         .language-toggle-button:hover {
+             background-color: rgba(99, 102, 241, 0.9); /* Darker indigo */
+         }
+
+
+        .dictionary-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 400px; /* Limit height and add scrolling */
+            overflow-y: auto;
+        }
+        .dictionary-item {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between; /* Space out Balochi and English/Arabic */
+            align-items: center;
+        }
+        .dictionary-item strong {
+            font-weight: 600;
+            color: #e0f2fe; /* Balochi word color */
+            font-size: 1.1rem;
+        }
+         .dictionary-item span {
+            color: #f0f9ff; /* Translation color */
+            font-size: 1rem;
+            text-align: right; /* Align Arabic text to the right */
+            flex-shrink: 0; /* Prevent text from shrinking */
+            margin-left: 1rem; /* Space between Balochi and translation */
+         }
+         .hidden {
+             display: none;
+         }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="quiz-title">Balochi Word App</h1>
+
+        <div class="navigation">
+            <button id="nav-quiz" class="nav-button active">Quiz</button>
+            <button id="nav-dictionary" class="nav-button">Dictionary</button>
+        </div>
+
+        <div id="quiz-area">
+            <div class="word-display-container">
+                <div id="word-to-guess" class="word-display">Loading...</div>
+                <button id="play-word-sound" class="speaker-icon-button" aria-label="Play word pronunciation">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4l-5 5H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.81 5 3.54 5 6.71s-2.11 5.9-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                </button>
+            </div>
+
+            <div id="options-container" class="options-grid">
+                </div>
+            <div id="feedback" class="feedback-message"></div>
+            <div id="score" class="score-display">Score: 0 / 0</div>
+            <div id="streak-display" class="streak-display">Streak: 0</div>
+            <button id="next-word-button" class="next-button" disabled>Next Word</button>
+        </div>
+
+        <div id="results-area" class="hidden final-score-container">
+            <p class="final-score-text">Quiz Finished!</p>
+            <p id="final-score" class="final-score-value"></p>
+            <button id="restart-quiz-button" class="restart-button">Restart Quiz</button>
+        </div>
+
+        <div id="dictionary-area" class="hidden">
+            <h2 class="quiz-title" style="margin-bottom: 1rem;">Dictionary</h2>
+            <div class="dictionary-controls"> <div class="dictionary-search">
+                    <input type="text" id="dictionary-search-input" placeholder="Search Balochi or English/Arabic...">
+                </div>
+                 <button id="language-toggle-button" class="language-toggle-button">Show Arabic</button> </div>
+            <ul id="dictionary-list" class="dictionary-list">
+                </ul>
+        </div>
+    </div>
+
+    <script>
+        // --- Word List ---
+        // Added Arabic translations. Note: These are generated translations and may not be perfectly accurate.
+        const words = [
+            // Numbers
+            { balochi: "یک", english: "One", arabic: "واحد" }, { balochi: "دو", english: "Two", arabic: "اثنان" }, { balochi: "سه", english: "Three", arabic: "ثلاثة" },
+            { balochi: "چهار", english: "Four", arabic: "أربعة" }, { balochi: "پنج", english: "Five", arabic: "خمسة" }, { balochi: "شش", english: "Six", arabic: "ستة" },
+            { balochi: "هفت", english: "Seven", arabic: "سبعة" }, { balochi: "هشت", english: "Eight", arabic: "ثمانية" }, { balochi: "نه", english: "Nine", arabic: "تسعة" },
+            { balochi: "ده", english: "Ten", arabic: "عشرة" }, { balochi: "یازده", english: "Eleven", arabic: "أحد عشر" }, { balochi: "دوازده", english: "Twelve", arabic: "اثنا عشر" },
+            // People & Family
+            { balochi: "مات", english: "Mother", arabic: "أم" }, { balochi: "پت", english: "Father", arabic: "أب" }, { balochi: "بچ", english: "Son", arabic: "ابن" },
+            { balochi: "مرد", english: "Man", arabic: "رجل" }, { balochi: "جن", english: "Woman", arabic: "امرأة" }, { balochi: "یار", english: "Friend", arabic: "صديق" },
+            { balochi: "ناکو", english: "Uncle", arabic: "عم" }, { balochi: "گوهار", english: "Sister", arabic: "أخت" }, { balochi: "انسان", english: "Human", arabic: "إنسان" },
+            { balochi: "استاد", english: "Teacher", arabic: "معلم" },
+            // Nature & Time
+            { balochi: "روچ", english: "Sun", arabic: "شمس" }, { balochi: "شب", english: "Night", arabic: "ليل" }, { balochi: "آپ", english: "Water", arabic: "ماء" },
+            { balochi: "گرم", english: "Warm", arabic: "حار" }, { balochi: "سرد", english: "Cold", arabic: "بارد" }, { balochi: "کوه", english: "Mountain", arabic: "جبل" },
+            { balochi: "برف", english: "Snow", arabic: "ثلج" }, { balochi: "آس", english: "Fire", arabic: "نار" }, { balochi: "ریک", english: "Sand", arabic: "رمل" },
+            { balochi: "بام", english: "Dawn", arabic: "فجر" }, { balochi: "ماه", english: "Moon", arabic: "قمر" }, { balochi: "هور", english: "Rain", arabic: "مطر" },
+            { balochi: "درد", english: "Rainshower", arabic: "زخ" }, { balochi: "پل", english: "Flower", arabic: "زهرة" }, { balochi: "کور", english: "River", arabic: "نهر" },
+            { balochi: "زمین", english: "Earth", arabic: "أرض" }, { balochi: "درچک", english: "Tree", arabic: "شجرة" },
+            // Animals
+            { balochi: "بز", english: "Goat", arabic: "عنزة" }, { balochi: "میش", english: "Sheep", arabic: "خروف" }, { balochi: "اسپ", english: "Horse", arabic: "حصان" },
+            { balochi: "اشتر", english: "Camel", arabic: "جمل" }, { balochi: "شیر", english: "Tiger", arabic: "نمر" }, { balochi: "گواسک", english: "Calf", arabic: "عجل" },
+            { balochi: "مرگ", english: "Bird", arabic: "طائر" }, { balochi: "ماهی", english: "Fish", arabic: "سمكة" },
+            // Body Parts
+            { balochi: "چَم", english: "Eye", arabic: "عين" }, { balochi: "پاد", english: "Foot", arabic: "قدم" }, { balochi: "لاپ", english: "Stomach", arabic: "معدة" },
+            { balochi: "سرگ", english: "Head", arabic: "رأس" }, { balochi: "هون", english: "Blood", arabic: "دم" }, { balochi: "دست", english: "Hand", arabic: "يد" },
+            { balochi: "دندان", english: "Tooth", arabic: "سن" },
+            // Food & Drink
+            { balochi: "نگن", english: "Bread", arabic: "خبز" }, { balochi: "شیر", english: "Milk", arabic: "حليب" }, { balochi: "ورگ", english: "Food", arabic: "طعام" },
+            { balochi: "واد", english: "Salt", arabic: "ملح" }, { balochi: "گوشت", english: "Meat", arabic: "لحم" }, { balochi: "بت", english: "Cooked Rice", arabic: "أرز مطبوخ" },
+            // Common Objects & Concepts
+            { balochi: "کار", english: "Work", arabic: "عمل" }, { balochi: "زر", english: "Money", arabic: "مال" }, { balochi: "کلیٹ", english: "Key", arabic: "مفتاح" },
+            { balochi: "لوگ", english: "House", arabic: "بيت" }, { balochi: "کتاب", english: "Book", arabic: "كتاب" }, { balochi: "قلم", english: "Pen", arabic: "قلم" },
+            { balochi: "دیم", english: "Face", arabic: "وجه" }, { balochi: "راه", english: "Road", arabic: "طريق" }, { balochi: "نام", english: "Name", arabic: "اسم" },
+            // Adjectives & Adverbs
+            { balochi: "شر", english: "Good", arabic: "جيد" }, { balochi: "کسان", english: "Small", arabic: "صغير" }, { balochi: "ماستر", english: "Big", arabic: "كبير" },
+            { balochi: "وش", english: "Happy", arabic: "سعيد" }, { balochi: "درد", english: "Pain", arabic: "ألم" }, { balochi: "نوک", english: "New", arabic: "جديد" },
+            { balochi: "کهن", english: "Old", arabic: "قديم" }, { balochi: "پیر", english: "Old", arabic: "عجوز" }, { balochi: "بس", english: "Enough", arabic: "كفى" },
+            { balochi: "زی", english: "Yesterday", arabic: "أمس" }, { balochi: "مروچی", english: "Today", arabic: "اليوم" }, { balochi: "بانگاه", english: "Tomorrow", arabic: "غدا" },
+            { balochi: "دور", english: "Distant", arabic: "بعيد" }, { balochi: "نزیک", english: "Nearby", arabic: "قريب" }, { balochi: "گواند", english: "Short", arabic: "قصير" },
+            { balochi: "تنها", english: "Alone", arabic: "وحيد" }, { balochi: "زوت", english: "Quickly", arabic: "بسرعة" }, { balochi: "گژنگ", english: "Hungry", arabic: "جائع" },
+            { balochi: "ژند", english: "Tired", arabic: "متعب" },
+            // Basic Phrases & Interjections
+            { balochi: "سلام علیکم", english: "Hello", arabic: "السلام عليكم" }, { balochi: "مهر بانی کن", english: "Please", arabic: "من فضلك" },
+            { balochi: "منت وار", english: "Thank you", arabic: "شكرا" }, { balochi: "بلی", english: "Yes", arabic: "نعم" }, { balochi: "نا", english: "No", arabic: "لا" },
+            { balochi: "وش", english: "Well", arabic: "بخير" }, { balochi: "اللهءِ میارءَ", english: "Goodbye", arabic: "في أمان الله" },
+            { balochi: "چونے تو؟", english: "How are you?", arabic: "كيف حالك؟" }, { balochi: "من وشون", english: "I am fine", arabic: "أنا بخير" },
+            { balochi: "بیار", english: "Come", arabic: "تعال" }, { balochi: "برو", english: "Go", arabic: "اذهب" }, { balochi: "بچار", english: "Look", arabic: "انظر" },
+            { balochi: "بگیر", english: "Take", arabic: "خذ" },
+            // Colors
+            { balochi: "اسپیت", english: "White", arabic: "أبيض" }, { balochi: "سیاه", english: "Black", arabic: "أسود" }, { balochi: "سهر", english: "Red", arabic: "أحمر" },
+            { balochi: "شونژ", english: "Green", arabic: "أخضر" }, { balochi: "زرد", english: "Yellow", arabic: "أصفر" }, { balochi: "نیل", english: "Blue", arabic: "أزرق" },
+            { balochi: "آسمانی", english: "Azure", arabic: "سماوي" }, { balochi: "ناسی", english: "Brown", arabic: "بني" }, { balochi: "پوری", english: "Gray", arabic: "رمادي" }
+        ];
+
+
+        // --- DOM Elements ---
+        const wordToGuessEl = document.getElementById('word-to-guess');
+        const optionsContainerEl = document.getElementById('options-container');
+        const feedbackEl = document.getElementById('feedback');
+        const scoreEl = document.getElementById('score');
+        const streakDisplayEl = document.getElementById('streak-display');
+        const nextWordButton = document.getElementById('next-word-button');
+        const quizAreaEl = document.getElementById('quiz-area');
+        const resultsAreaEl = document.getElementById('results-area');
+        const finalScoreEl = document.getElementById('final-score');
+        const restartQuizButton = document.getElementById('restart-quiz-button');
+        const playWordSoundButton = document.getElementById('play-word-sound');
+
+        // New DOM Elements for Navigation and Dictionary
+        const navQuizButton = document.getElementById('nav-quiz');
+        const navDictionaryButton = document.getElementById('nav-dictionary');
+        const dictionaryAreaEl = document.getElementById('dictionary-area');
+        const dictionaryListEl = document.getElementById('dictionary-list');
+        const dictionarySearchInput = document.getElementById('dictionary-search-input');
+        const languageToggleButton = document.getElementById('language-toggle-button'); // New toggle button
+
+
+        // --- Quiz State Variables ---
+        let currentWordIndex = 0;
+        let score = 0;
+        let questionsAttempted = 0;
+        let shuffledWords = [];
+        let currentCorrectAnswer = '';
+        let currentCorrectBalochiWord = ''; // Store the Balochi word
+        const numberOfOptions = 4;
+        let currentStreak = 0;
+        let highestStreak = 0;
+
+        // Dictionary State Variable
+        let currentDictionaryLanguage = 'english'; // 'english' or 'arabic'
+
+        // --- Utility Functions ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Function to attempt playing the word sound using Web Speech API
+        function playWordSound(word) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                // Attempt to set language for better pronunciation if available.
+                // Balochi language code ('bal') might not be widely supported by browsers.
+                // Using codes for nearby languages like Urdu ('ur-PK') or Farsi ('fa-IR')
+                // might provide a better approximation, but pronunciation is not guaranteed
+                // to be accurate Balochi and depends entirely on the browser's available voices.
+                utterance.lang = 'ur-PK'; // Example: Using Urdu as a placeholder fallback.
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.warn('Text-to-speech not supported in this browser.');
+            }
+        }
+
+        // Function to display the dictionary based on an optional filter and current language
+        function displayDictionary(filter = '') {
+            // Clear previous list
+            dictionaryListEl.innerHTML = '';
+
+            // Filter words based on the input string (case-insensitive)
+            const filteredWords = words.filter(word =>
+                word.balochi.toLowerCase().includes(filter.toLowerCase()) ||
+                word.english.toLowerCase().includes(filter.toLowerCase()) ||
+                 (word.arabic && word.arabic.toLowerCase().includes(filter.toLowerCase())) // Include arabic in search
+            );
+
+            // Sort filtered words alphabetically by Balochi word
+            const sortedWords = [...filteredWords].sort((a, b) => a.balochi.localeCompare(b.balochi));
+
+            if (sortedWords.length === 0) {
+                const noResultsItem = document.createElement('li');
+                noResultsItem.classList.add('dictionary-item');
+                noResultsItem.textContent = 'No results found.';
+                dictionaryListEl.appendChild(noResultsItem);
+            } else {
+                sortedWords.forEach(word => {
+                    const listItem = document.createElement('li');
+                    listItem.classList.add('dictionary-item');
+
+                    const translation = currentDictionaryLanguage === 'english' ? word.english : word.arabic;
+                     // Set text direction for Arabic
+                    const translationDir = currentDictionaryLanguage === 'arabic' ? 'rtl' : 'ltr';
+
+                    listItem.innerHTML = `<strong>${word.balochi}</strong> <span dir="${translationDir}">${translation}</span>`;
+                    dictionaryListEl.appendChild(listItem);
+                });
+            }
+        }
+
+        // Function to switch views
+        function switchView(view) {
+            if (view === 'quiz') {
+                quizAreaEl.classList.remove('hidden');
+                resultsAreaEl.classList.add('hidden'); // Ensure results are hidden when going back to quiz
+                dictionaryAreaEl.classList.add('hidden');
+                navQuizButton.classList.add('active');
+                navDictionaryButton.classList.remove('active');
+                 // Restart quiz when switching back to quiz view
+                startQuiz();
+                // Clear search input when leaving dictionary
+                dictionarySearchInput.value = '';
+
+            } else if (view === 'dictionary') {
+                quizAreaEl.classList.add('hidden');
+                resultsAreaEl.classList.add('hidden'); // Ensure results are hidden when viewing dictionary
+                dictionaryAreaEl.classList.remove('hidden');
+                navQuizButton.classList.remove('active');
+                navDictionaryButton.classList.add('active');
+                displayDictionary(dictionarySearchInput.value); // Populate and display the dictionary with current search filter
+            }
+        }
+
+        // --- Quiz Logic Functions ---
+        function startQuiz() {
+            score = 0;
+            questionsAttempted = 0;
+            currentWordIndex = 0;
+            currentStreak = 0;
+            shuffledWords = [...words];
+            shuffleArray(shuffledWords);
+
+            quizAreaEl.classList.remove('hidden');
+            resultsAreaEl.classList.add('hidden');
+            dictionaryAreaEl.classList.add('hidden'); // Ensure dictionary is hidden
+            nextWordButton.disabled = true;
+            feedbackEl.textContent = '';
+            feedbackEl.className = 'feedback-message';
+
+            loadNextWord();
+            updateScoreDisplay();
+            updateStreakDisplay();
+        }
+
+        /**
+         * Loads the next word and its options for the quiz.
+         */
+        function loadNextWord() {
+            if (currentWordIndex < shuffledWords.length) {
+                const currentWordData = shuffledWords[currentWordIndex];
+                wordToGuessEl.textContent = currentWordData.balochi;
+                currentCorrectAnswer = currentWordData.english;
+                currentCorrectBalochiWord = currentWordData.balochi;
+
+                const options = [currentCorrectAnswer];
+                const incorrectAnswersPool = words
+                    .filter(word => word.english !== currentCorrectAnswer)
+                    .map(word => word.english);
+                shuffleArray(incorrectAnswersPool);
+
+                for (let i = 0; options.length < numberOfOptions && i < incorrectAnswersPool.length; i++) {
+                    if (!options.includes(incorrectAnswersPool[i])) {
+                        options.push(incorrectAnswersPool[i]);
+                    }
+                }
+                let emergencyFillIndex = 0;
+                while (options.length < numberOfOptions && emergencyFillIndex < words.length) {
+                    const randomFallback = words[emergencyFillIndex].english;
+                    if (!options.includes(randomFallback)) {
+                        options.push(randomFallback);
+                    }
+                    emergencyFillIndex++;
+                }
+                 while (options.length < numberOfOptions) {
+                    options.push(`Option ${options.length + 1}`);
+                }
+                shuffleArray(options);
+
+                optionsContainerEl.innerHTML = '';
+                options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.classList.add('option-button');
+                    button.addEventListener('click', () => handleOptionClick(option, button));
+                    optionsContainerEl.appendChild(button);
+                });
+
+                feedbackEl.textContent = '';
+                feedbackEl.className = 'feedback-message';
+                nextWordButton.disabled = true;
+                enableOptionButtons(true);
+            } else {
+                endQuiz();
+            }
+        }
+
+        /**
+         * Handles the click event on an option button.
+         */
+        function handleOptionClick(selectedOption, buttonEl) {
+            questionsAttempted++;
+            enableOptionButtons(false);
+            nextWordButton.disabled = false;
+
+            feedbackEl.innerHTML = '';
+
+            if (selectedOption === currentCorrectAnswer) {
+                score++;
+                currentStreak++;
+                if (currentStreak > highestStreak) {
+                    highestStreak = currentStreak;
+                }
+                feedbackEl.textContent = 'Correct! 🎉';
+                feedbackEl.className = 'feedback-message correct';
+                buttonEl.style.backgroundColor = 'rgba(16, 185, 129, 0.9)';
+            } else {
+                currentStreak = 0;
+                feedbackEl.textContent = `Incorrect. The answer was: ${currentCorrectAnswer}`;
+                feedbackEl.className = 'feedback-message incorrect';
+                buttonEl.style.backgroundColor = 'rgba(239, 68, 68, 0.9)';
+
+                const balochiTranslationEl = document.createElement('span');
+                balochiTranslationEl.textContent = `(${currentCorrectBalochiWord})`;
+                balochiTranslationEl.classList.add('feedback-translation');
+                feedbackEl.appendChild(balochiTranslationEl);
+
+
+                Array.from(optionsContainerEl.children).forEach(btn => {
+                    if (btn.textContent === currentCorrectAnswer) {
+                        btn.style.backgroundColor = 'rgba(16, 185, 129, 0.7)';
+                    }
+                });
+            }
+            updateScoreDisplay();
+            updateStreakDisplay();
+        }
+
+        /**
+         * Enables or disables all option buttons.
+         */
+        function enableOptionButtons(enable) {
+            const buttons = optionsContainerEl.getElementsByTagName('button');
+            for (let button of buttons) {
+                button.disabled = !enable;
+                if (enable) {
+                    button.style.backgroundColor = '';
+                    button.style.borderColor = '';
+                }
+            }
+        }
+
+        /**
+         * Updates the displayed score.
+         */
+        function updateScoreDisplay() {
+            scoreEl.textContent = `Score: ${score} / ${questionsAttempted}`;
+        }
+
+        /**
+         * Updates the displayed streak.
+         */
+        function updateStreakDisplay() {
+            streakDisplayEl.textContent = `Streak: ${currentStreak}`;
+        }
+
+        /**
+         * Ends the quiz and displays the final score.
+         */
+        function endQuiz() {
+            quizAreaEl.classList.add('hidden');
+            resultsAreaEl.classList.remove('hidden');
+        }
+
+        // --- Event Listeners ---
+        nextWordButton.addEventListener('click', () => {
+            currentWordIndex++;
+            loadNextWord();
+        });
+
+        restartQuizButton.addEventListener('click', startQuiz);
+
+        playWordSoundButton.addEventListener('click', () => {
+            const word = wordToGuessEl.textContent;
+            playWordSound(word);
+        });
+
+        // Navigation button event listeners
+        navQuizButton.addEventListener('click', () => switchView('quiz'));
+        navDictionaryButton.addEventListener('click', () => switchView('dictionary'));
+
+        // Dictionary search input event listener
+        dictionarySearchInput.addEventListener('input', (event) => {
+            const searchTerm = event.target.value;
+            displayDictionary(searchTerm); // Filter and display based on input
+        });
+
+        // Language toggle button event listener
+        languageToggleButton.addEventListener('click', () => {
+            if (currentDictionaryLanguage === 'english') {
+                currentDictionaryLanguage = 'arabic';
+                languageToggleButton.textContent = 'Show English';
+                 dictionarySearchInput.placeholder = 'Search Balochi or Arabic...';
+            } else {
+                currentDictionaryLanguage = 'english';
+                languageToggleButton.textContent = 'Show Arabic';
+                 dictionarySearchInput.placeholder = 'Search Balochi or English...';
+            }
+            displayDictionary(dictionarySearchInput.value); // Refresh dictionary display with current filter
+        });
+
+
+        // --- Initial Setup ---
+        // Start the quiz when the page loads
+        startQuiz();
+    </script>
+</body>
+</html>
